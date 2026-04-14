@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getDb } from "@/lib/db";
+import { getDb, initDb } from "@/lib/db";
 import { signToken, setAuthCookie } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -19,16 +19,22 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getDb();
-  const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username);
-  if (existing) {
+  await initDb();
+
+  const existing = await db.execute({ sql: "SELECT id FROM users WHERE username = ?", args: [username] });
+  if (existing.rows.length > 0) {
     return NextResponse.json({ error: "Username already taken" }, { status: 409 });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const result = db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run(username, hashedPassword);
+  const result = await db.execute({
+    sql: "INSERT INTO users (username, password) VALUES (?, ?)",
+    args: [username, hashedPassword],
+  });
 
-  const token = signToken(result.lastInsertRowid as number, username);
+  const userId = Number(result.lastInsertRowid);
+  const token = signToken(userId, username);
   await setAuthCookie(token);
 
-  return NextResponse.json({ id: result.lastInsertRowid, username });
+  return NextResponse.json({ id: userId, username });
 }

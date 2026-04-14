@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getDb } from "@/lib/db";
+import { getDb, initDb } from "@/lib/db";
 import { signToken, setAuthCookie } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -11,20 +11,21 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getDb();
-  const user = db.prepare("SELECT id, username, password FROM users WHERE username = ?").get(username) as
-    | { id: number; username: string; password: string }
-    | undefined;
+  await initDb();
+
+  const result = await db.execute({ sql: "SELECT id, username, password FROM users WHERE username = ?", args: [username] });
+  const user = result.rows[0];
 
   if (!user) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
-  const valid = await bcrypt.compare(password, user.password);
+  const valid = await bcrypt.compare(password, user.password as string);
   if (!valid) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
-  const token = signToken(user.id, user.username);
+  const token = signToken(Number(user.id), user.username as string);
   await setAuthCookie(token);
 
   return NextResponse.json({ id: user.id, username: user.username });

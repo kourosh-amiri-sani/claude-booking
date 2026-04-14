@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, initDb } from "@/lib/db";
 import { getAuthUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const week = searchParams.get("week");
 
   const db = getDb();
+  await initDb();
 
   if (week) {
     const weekStart = new Date(week);
@@ -19,27 +20,25 @@ export async function GET(request: NextRequest) {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 7);
 
-    const bookings = db
-      .prepare(
-        `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
-         FROM bookings b JOIN users u ON b.user_id = u.id
-         WHERE b.start_time < ? AND b.end_time > ?
-         ORDER BY b.start_time`
-      )
-      .all(weekEnd.toISOString(), weekStart.toISOString());
+    const result = await db.execute({
+      sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
+            FROM bookings b JOIN users u ON b.user_id = u.id
+            WHERE b.start_time < ? AND b.end_time > ?
+            ORDER BY b.start_time`,
+      args: [weekEnd.toISOString(), weekStart.toISOString()],
+    });
 
-    return NextResponse.json(bookings);
+    return NextResponse.json(result.rows);
   }
 
-  const bookings = db
-    .prepare(
-      `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
-       FROM bookings b JOIN users u ON b.user_id = u.id
-       ORDER BY b.start_time`
-    )
-    .all();
+  const result = await db.execute({
+    sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
+          FROM bookings b JOIN users u ON b.user_id = u.id
+          ORDER BY b.start_time`,
+    args: [],
+  });
 
-  return NextResponse.json(bookings);
+  return NextResponse.json(result.rows);
 }
 
 function snapTo15Min(date: Date): Date {
@@ -68,25 +67,24 @@ export async function POST(request: NextRequest) {
   }
 
   const db = getDb();
+  await initDb();
 
-  // Check for overlaps
-  const overlap = db
-    .prepare(
-      `SELECT id FROM bookings
-       WHERE start_time < ? AND end_time > ?`
-    )
-    .get(end.toISOString(), start.toISOString());
+  const overlap = await db.execute({
+    sql: "SELECT id FROM bookings WHERE start_time < ? AND end_time > ?",
+    args: [end.toISOString(), start.toISOString()],
+  });
 
-  if (overlap) {
+  if (overlap.rows.length > 0) {
     return NextResponse.json({ error: "This timeslot overlaps with an existing booking" }, { status: 409 });
   }
 
-  const result = db
-    .prepare("INSERT INTO bookings (user_id, start_time, end_time) VALUES (?, ?, ?)")
-    .run(user.userId, start.toISOString(), end.toISOString());
+  const result = await db.execute({
+    sql: "INSERT INTO bookings (user_id, start_time, end_time) VALUES (?, ?, ?)",
+    args: [user.userId, start.toISOString(), end.toISOString()],
+  });
 
   return NextResponse.json({
-    id: result.lastInsertRowid,
+    id: Number(result.lastInsertRowid),
     user_id: user.userId,
     username: user.username,
     start_time: start.toISOString(),
