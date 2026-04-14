@@ -241,6 +241,7 @@ export default function Calendar({
                       }}
                     >
                       <div className="font-semibold truncate">{booking.username}</div>
+                      {booking.work_type && <div className="truncate">{booking.work_type}</div>}
                       <div className="truncate">
                         {formatTime(new Date(booking.start_time))} - {formatTime(new Date(booking.end_time))}
                       </div>
@@ -258,6 +259,7 @@ export default function Calendar({
         <div className="border-t bg-white px-4 py-3 flex items-center justify-between">
           <div className="text-sm text-gray-700">
             <span className="font-semibold">{selectedBooking.username}</span>
+            {selectedBooking.work_type && <span className="text-gray-500"> — {selectedBooking.work_type}</span>}
             {" — "}
             {new Date(selectedBooking.start_time).toLocaleString()} to{" "}
             {new Date(selectedBooking.end_time).toLocaleTimeString()}

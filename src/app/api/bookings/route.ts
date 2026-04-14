@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     weekEnd.setDate(weekEnd.getDate() + 7);
 
     const result = await db.execute({
-      sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
+      sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.work_type, b.created_at
             FROM bookings b JOIN users u ON b.user_id = u.id
             WHERE b.start_time < ? AND b.end_time > ?
             ORDER BY b.start_time`,
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   const result = await db.execute({
-    sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.created_at
+    sql: `SELECT b.id, b.user_id, u.username, b.start_time, b.end_time, b.work_type, b.created_at
           FROM bookings b JOIN users u ON b.user_id = u.id
           ORDER BY b.start_time`,
     args: [],
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { start_time, end_time } = await request.json();
+  const { start_time, end_time, work_type } = await request.json();
 
   if (!start_time || !end_time) {
     return NextResponse.json({ error: "start_time and end_time are required" }, { status: 400 });
@@ -78,9 +78,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This timeslot overlaps with an existing booking" }, { status: 409 });
   }
 
+  const workType = work_type || "";
+
   const result = await db.execute({
-    sql: "INSERT INTO bookings (user_id, start_time, end_time) VALUES (?, ?, ?)",
-    args: [user.userId, start.toISOString(), end.toISOString()],
+    sql: "INSERT INTO bookings (user_id, start_time, end_time, work_type) VALUES (?, ?, ?, ?)",
+    args: [user.userId, start.toISOString(), end.toISOString(), workType],
   });
 
   return NextResponse.json({
@@ -89,5 +91,6 @@ export async function POST(request: NextRequest) {
     username: user.username,
     start_time: start.toISOString(),
     end_time: end.toISOString(),
+    work_type: workType,
   });
 }

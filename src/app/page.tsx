@@ -58,11 +58,11 @@ export default function Home() {
     setShowForm(true);
   }
 
-  async function handleSubmitBooking(start: string, end: string) {
+  async function handleSubmitBooking(start: string, end: string, workType: string) {
     const res = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start_time: start, end_time: end }),
+      body: JSON.stringify({ start_time: start, end_time: end, work_type: workType }),
     });
 
     if (!res.ok) {

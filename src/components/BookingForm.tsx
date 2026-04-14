@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface BookingFormProps {
-  onSubmit: (start: string, end: string) => void;
+  onSubmit: (start: string, end: string, workType: string) => void;
   onClose: () => void;
   initialStart?: string;
   initialEnd?: string;
@@ -14,12 +14,13 @@ export default function BookingForm({ onSubmit, onClose, initialStart, initialEn
   const [startDate, setStartDate] = useState(initialStart?.slice(0, 10) || "");
   const [startTime, setStartTime] = useState(initialStart ? new Date(initialStart).toTimeString().slice(0, 5) : "09:00");
   const [endTime, setEndTime] = useState(initialEnd ? new Date(initialEnd).toTimeString().slice(0, 5) : "10:00");
+  const [workType, setWorkType] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const start = new Date(`${startDate}T${startTime}:00`);
     const end = new Date(`${startDate}T${endTime}:00`);
-    onSubmit(start.toISOString(), end.toISOString());
+    onSubmit(start.toISOString(), end.toISOString(), workType);
   }
 
   return (
@@ -60,6 +61,16 @@ export default function BookingForm({ onSubmit, onClose, initialStart, initialEn
                 required
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Type of Work</label>
+            <input
+              type="text"
+              value={workType}
+              onChange={(e) => setWorkType(e.target.value)}
+              placeholder="e.g. Meeting, Development, Testing..."
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <div className="flex gap-2 justify-end">

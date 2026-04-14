@@ -11,5 +11,6 @@ export interface Booking {
   username: string;
   start_time: string;
   end_time: string;
+  work_type: string;
   created_at: string;
 }

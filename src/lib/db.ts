@@ -30,10 +30,18 @@ export async function initDb() {
       user_id INTEGER NOT NULL,
       start_time TEXT NOT NULL,
       end_time TEXT NOT NULL,
+      work_type TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Migrate: add work_type column if it doesn't exist
+  try {
+    await db.execute("ALTER TABLE bookings ADD COLUMN work_type TEXT NOT NULL DEFAULT ''");
+  } catch {
+    // Column already exists
+  }
 
   // Seed default admin if no users exist
   const result = await db.execute("SELECT COUNT(*) as count FROM users");
