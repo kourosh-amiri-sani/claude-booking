@@ -4,13 +4,19 @@ import { cookies } from "next/headers";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 const COOKIE_NAME = "auth_token";
 
-export function signToken(userId: number, username: string): string {
-  return jwt.sign({ userId, username }, JWT_SECRET, { expiresIn: "7d" });
+export interface AuthUser {
+  userId: number;
+  username: string;
+  isAdmin: boolean;
 }
 
-export function verifyToken(token: string): { userId: number; username: string } | null {
+export function signToken(userId: number, username: string, isAdmin: boolean): string {
+  return jwt.sign({ userId, username, isAdmin }, JWT_SECRET, { expiresIn: "7d" });
+}
+
+export function verifyToken(token: string): AuthUser | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: number; username: string };
+    return jwt.verify(token, JWT_SECRET) as AuthUser;
   } catch {
     return null;
   }
@@ -27,7 +33,7 @@ export async function setAuthCookie(token: string) {
   });
 }
 
-export async function getAuthUser(): Promise<{ userId: number; username: string } | null> {
+export async function getAuthUser(): Promise<AuthUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;

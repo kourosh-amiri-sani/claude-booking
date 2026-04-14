@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -78,11 +76,8 @@ export default function LoginPage() {
             {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
+        <p className="mt-4 text-center text-sm text-gray-500">
+          Contact your administrator for an account.
         </p>
       </div>
     </div>

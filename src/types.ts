@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   username: string;
+  is_admin: number;
   created_at: string;
 }
 

@@ -1,4 +1,5 @@
 import { createClient, type Client } from "@libsql/client";
+import bcrypt from "bcryptjs";
 
 let client: Client | null = null;
 
@@ -19,6 +20,7 @@ export async function initDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      is_admin INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -31,4 +33,14 @@ export async function initDb() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
+
+  // Seed default admin if no users exist
+  const result = await db.execute("SELECT COUNT(*) as count FROM users");
+  if (Number(result.rows[0].count) === 0) {
+    const hashedPassword = await bcrypt.hash("admin", 10);
+    await db.execute({
+      sql: "INSERT INTO users (username, password, is_admin) VALUES (?, ?, 1)",
+      args: ["admin", hashedPassword],
+    });
+  }
 }

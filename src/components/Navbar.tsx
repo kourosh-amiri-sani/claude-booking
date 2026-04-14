@@ -4,11 +4,12 @@ import { Booking } from "@/types";
 
 interface NavbarProps {
   username: string;
+  isAdmin: boolean;
   bookings: Booking[];
   onLogout: () => void;
 }
 
-export default function Navbar({ username, bookings, onLogout }: NavbarProps) {
+export default function Navbar({ username, isAdmin, bookings, onLogout }: NavbarProps) {
   const now = new Date();
   const currentBooking = bookings.find((b) => {
     const start = new Date(b.start_time);
@@ -39,6 +40,14 @@ export default function Navbar({ username, bookings, onLogout }: NavbarProps) {
         <span className="text-sm text-gray-600">
           Logged in as <span className="font-medium text-gray-900">{username}</span>
         </span>
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="px-3 py-1 text-sm border border-purple-300 text-purple-700 rounded hover:bg-purple-50 transition-colors"
+          >
+            Admin
+          </a>
+        )}
         <button
           onClick={onLogout}
           className="px-3 py-1 text-sm border rounded hover:bg-gray-50 text-gray-700 transition-colors"

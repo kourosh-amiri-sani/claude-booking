@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const db = getDb();
   await initDb();
 
-  const result = await db.execute({ sql: "SELECT id, username, password FROM users WHERE username = ?", args: [username] });
+  const result = await db.execute({ sql: "SELECT id, username, password, is_admin FROM users WHERE username = ?", args: [username] });
   const user = result.rows[0];
 
   if (!user) {
@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
   }
 
-  const token = signToken(Number(user.id), user.username as string);
+  const isAdmin = Boolean(user.is_admin);
+  const token = signToken(Number(user.id), user.username as string, isAdmin);
   await setAuthCookie(token);
 
-  return NextResponse.json({ id: user.id, username: user.username });
+  return NextResponse.json({ id: user.id, username: user.username, isAdmin });
 }

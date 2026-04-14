@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import { Booking } from "@/types";
 
 export default function Home() {
-  const [user, setUser] = useState<{ id: number; username: string } | null>(null);
+  const [user, setUser] = useState<{ id: number; username: string; isAdmin: boolean } | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
   const [showForm, setShowForm] = useState(false);
@@ -97,7 +97,7 @@ export default function Home() {
 
   return (
     <div className="h-screen flex flex-col">
-      <Navbar username={user.username} bookings={bookings} onLogout={handleLogout} />
+      <Navbar username={user.username} isAdmin={user.isAdmin} bookings={bookings} onLogout={handleLogout} />
       <div className="flex-1 overflow-hidden">
         <Calendar
           bookings={bookings}
