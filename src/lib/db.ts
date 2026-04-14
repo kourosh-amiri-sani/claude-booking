@@ -5,7 +5,7 @@ let client: Client | null = null;
 export function getDb(): Client {
   if (!client) {
     client = createClient({
-      url: process.env.TURSO_DATABASE_URL || "file:data/booking.db",
+      url: process.env.TURSO_DATABASE_URL || (process.env.VERCEL ? "file:/tmp/booking.db" : "file:data/booking.db"),
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
   }
