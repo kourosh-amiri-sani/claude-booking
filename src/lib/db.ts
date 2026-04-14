@@ -15,15 +15,16 @@ export function getDb(): Client {
 
 export async function initDb() {
   const db = getDb();
-  await db.executeMultiple(`
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       is_admin INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
+    )
+  `);
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS bookings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -31,7 +32,7 @@ export async function initDb() {
       end_time TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+    )
   `);
 
   // Seed default admin if no users exist
